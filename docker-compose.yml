@@ -6,7 +6,7 @@ services:
     depends_on:
       - backend
     networks:
-      - app-network
+      - frontend-net
 
   backend:
     build: ./backend
@@ -21,12 +21,12 @@ services:
       - DB_NAME=mydatabase
       - DB_PORT=5432
     networks:
-      - app-network
+      - frontend-net
+      - backend-net
 
   db:
     image: postgres:15
     container_name: postgres_db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -36,10 +36,18 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - app-network
+      - backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 networks:
-  app-network:
+  frontend-net:
+  backend-net:
 
 volumes:
-  pgdata:
+   pgdata:
+     driver: local
